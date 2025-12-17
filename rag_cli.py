@@ -9,11 +9,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-# --- Paths ---
 BASE_DIR = Path(__file__).resolve().parent
 VECTOR_DIR = BASE_DIR / "chroma_db"
 
-# --- Environment (OpenRouter) ---
 load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -23,13 +21,9 @@ if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY not set. Add it to your .env file.")
 
 
-# --- Reuse same embeddings & Chroma as ingest.py ---
 def get_retriever():
-    """Load persisted Chroma DB and expose as retriever."""
     if not VECTOR_DIR.exists():
-        raise FileNotFoundError(
-            f"Vector DB folder not found: {VECTOR_DIR}. Run ingest.py first."
-        )
+        raise FileNotFoundError("Vector DB folder not found.")
 
     embeddings = OpenAIEmbeddings(
         model="openai/text-embedding-3-large",
@@ -42,8 +36,9 @@ def get_retriever():
         embedding_function=embeddings,
     )
 
-    # k = how many chunks per query
-    return vectordb.as_retriever(search_kwargs={"k": 3})
+    # CHANGED: Increased k from 3 to 6.
+    # This gives the AI more "memory" to answer questions like "Best month"
+    return vectordb.as_retriever(search_kwargs={"k": 6})
 
 
 def format_docs(docs):

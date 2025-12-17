@@ -7,3 +7,7 @@ streamlit
 chromadb
 python-dotenv
 langchain-text-splitters
+supabase
+pandas
+plotly
+scikit-learn

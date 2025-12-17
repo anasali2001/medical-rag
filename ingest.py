@@ -8,12 +8,10 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
-# --- Paths ---
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 VECTOR_DIR = BASE_DIR / "chroma_db"
 
-# --- Environment (OpenRouter) ---
 load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -22,7 +20,6 @@ OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/ap
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY not set. Add it to your .env file.")
 
-# --- Step 1: Load PDFs from data/ ---
 def load_pdfs():
     if not DATA_DIR.exists():
         raise FileNotFoundError(f"Data folder not found: {DATA_DIR}")
@@ -36,18 +33,16 @@ def load_pdfs():
         raise ValueError(f"No PDF files found in {DATA_DIR}")
     return docs
 
-# --- Step 2: Chunk documents ---
 def chunk_docs(docs):
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=150,
+        chunk_size=200,
+        chunk_overlap=50,
         separators=["\n\n", "\n", ".", "!", "?", " ", ""],
     )
     chunks = splitter.split_documents(docs)
     print(f"✅ Created {len(chunks)} chunks.")
     return chunks
 
-# --- Step 3: Build vector store with OpenRouter embeddings ---
 def build_vectorstore(chunks):
     embeddings = OpenAIEmbeddings(
         # This is an embedding model exposed via OpenRouter
@@ -62,7 +57,6 @@ def build_vectorstore(chunks):
         embedding=embeddings,
         persist_directory=str(VECTOR_DIR),
     )
-    #no need to add .persist() as it's called internally
     print(f"💾 Vector DB saved to: {VECTOR_DIR}")
     return vectordb
 
