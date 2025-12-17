@@ -183,7 +183,7 @@ def main():
     with tab2:
         st.header("Ask your Data")
         try:
-            chain = make_chain()
+            chain = make_chain(api_key=os.environ["OPENROUTER_API_KEY"])
             rag_ready = True
         except Exception:
             rag_ready = False
