@@ -1,19 +1,23 @@
-import streamlit as st
-import pandas as pd
-from pathlib import Path
-import os
+import streamlit as st   # first, import Streamlit
+import os                # then OS
+
+# Set environment variables immediately
 os.environ["OPENROUTER_API_KEY"] = st.secrets["openrouter"]["api_key"]
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
+
+# Now other imports
+import pandas as pd
+from pathlib import Path
 import re
 
 # Import components
 from rag_cli import make_chain
 from db_client import insert_lab_results, fetch_all_results
 from analytics_engine import generate_trend_chart
-# We will use existing ingest functions but call them manually for CSV text
 from ingest import chunk_docs, build_vectorstore
 from langchain_core.documents import Document
+
 
 st.set_page_config(page_title="Personal Medical Insights", layout="wide")
 
