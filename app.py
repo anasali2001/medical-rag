@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import os
+os.environ["OPENROUTER_API_KEY"] = st.secrets["openrouter"]["api_key"]
+SUPABASE_URL = st.secrets["supabase"]["url"]
+SUPABASE_KEY = st.secrets["supabase"]["key"]
 import re
 
 # Import components
@@ -14,9 +17,7 @@ from langchain_core.documents import Document
 
 st.set_page_config(page_title="Personal Medical Insights", layout="wide")
 
-os.environ["OPENROUTER_API_KEY"] = st.secrets["openrouter"]["api_key"]
-SUPABASE_URL = st.secrets["supabase"]["url"]
-SUPABASE_KEY = st.secrets["supabase"]["key"]
+
 MONTH_MAP = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12
