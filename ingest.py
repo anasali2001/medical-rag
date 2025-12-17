@@ -13,9 +13,29 @@ DATA_DIR = BASE_DIR / "data"
 VECTOR_DIR = BASE_DIR / "chroma_db"
 
 load_dotenv()
+import os
+from langchain_openai import OpenAIEmbeddings
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+# Replace this:
+# OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+# OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
+# With parameters passed from Streamlit
+def build_vectorstore(chunks, api_key, base_url="https://openrouter.ai/api/v1"):
+    embeddings = OpenAIEmbeddings(
+        model="openai/text-embedding-3-large",
+        api_key=api_key,
+        base_url=base_url,
+    )
+
+    vectordb = Chroma.from_documents(
+        documents=chunks,
+        embedding=embeddings,
+        persist_directory=str(VECTOR_DIR),
+    )
+    print(f"💾 Vector DB saved to: {VECTOR_DIR}")
+    return vectordb
+
 
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY not set. Add it to your .env file.")
