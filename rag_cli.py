@@ -21,14 +21,13 @@ if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY not set. Add it to your .env file.")
 
 
-def get_retriever():
-    if not VECTOR_DIR.exists():
-        raise FileNotFoundError("Vector DB folder not found.")
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
+def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
     embeddings = OpenAIEmbeddings(
         model="openai/text-embedding-3-large",
-        api_key=OPENROUTER_API_KEY,
-        base_url=OPENROUTER_BASE_URL,
+        api_key=api_key,
+        base_url=base_url,
     )
 
     vectordb = Chroma(
@@ -36,10 +35,7 @@ def get_retriever():
         embedding_function=embeddings,
     )
 
-    # CHANGED: Increased k from 3 to 6.
-    # This gives the AI more "memory" to answer questions like "Best month"
     return vectordb.as_retriever(search_kwargs={"k": 6})
-
 
 def format_docs(docs):
     """Format retrieved docs (with page + source) into a single string."""
@@ -50,49 +46,21 @@ def format_docs(docs):
         lines.append(f"[{i}] (source: {src}, page {page})\n{d.page_content}")
     return "\n\n".join(lines)
 
+def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
+    retriever = get_retriever(api_key, base_url)
 
-def make_chain():
-    retriever = get_retriever()
-
-    # 🔒 Prompt to reduce hallucinations
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "You are a helpful assistant for question-answering over a set of PDF documents.\n"
-                "Use ONLY the provided context to answer the question.\n"
-                "If the answer is not clearly present in the context, say you don't know instead of guessing.\n"
-                "Answer concisely and clearly.",
-            ),
-            (
-                "human",
-                "Context:\n{context}\n\nQuestion: {question}",
-            ),
-        ]
-    )
-
-    # 🧠 Kimi K2 via OpenRouter
     llm = ChatOpenAI(
-        model="moonshotai/kimi-k2",   # OpenRouter model name
-        api_key=OPENROUTER_API_KEY,
-        base_url=OPENROUTER_BASE_URL,
+        model="moonshotai/kimi-k2",
+        api_key=api_key,
+        base_url=base_url,
         temperature=0.1,
-        max_tokens=512,               # limit output length to keep cost low
-        max_retries=2,                # optional: retry on transient issues
+        max_tokens=512,
+        max_retries=2,
     )
 
-    # RAG chain: question -> retrieve -> prompt -> Kimi -> string
-    chain = (
-        {
-            "context": retriever | format_docs,
-            "question": RunnablePassthrough(),
-        }
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
 
-    return chain
+
+
 
 
 def main():
