@@ -237,7 +237,9 @@ def main():
                 if all_rag_docs:
                     status_text.text(f"🧠 Teaching AI {len(all_rag_docs)} data points...")
                     chunks = chunk_docs(all_rag_docs)
-                    build_vectorstore(chunks)
+                    
+                    build_vectorstore(chunks, api_key=os.environ["OPENROUTER_API_KEY"])
+
 
                 progress.progress(100)
                 status_text.text("Done!")
