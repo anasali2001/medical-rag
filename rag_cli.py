@@ -9,11 +9,18 @@ BASE_DIR = Path(__file__).resolve().parent
 VECTOR_DIR = BASE_DIR / "chroma_db"
 
 
+# rag_cli.py
+
 def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
     embeddings = OpenAIEmbeddings(
         model="openai/text-embedding-3-large",
         openai_api_key=api_key,
         base_url=base_url,
+        # ADD THESE HEADERS BELOW
+        default_headers={
+            "HTTP-Referer": "https://streamlit.io",
+            "X-Title": "medical-rag-app",
+        },
     )
 
     vectordb = Chroma(
