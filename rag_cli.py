@@ -14,12 +14,7 @@ def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
         model="openai/text-embedding-3-large",
         openai_api_key=api_key,
         base_url=base_url,
-        default_headers={
-            "HTTP-Referer": "https://streamlit.io",
-            "X-Title": "medical-rag-app",
-        },
-)
-
+    )
 
     vectordb = Chroma(
         persist_directory=str(VECTOR_DIR),
@@ -29,9 +24,12 @@ def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
     return vectordb.as_retriever(search_kwargs={"k": 6})
 
 
-
 def format_docs(docs):
-    return "\n\n".join(d.page_content for d in docs)
+    lines = []
+    for i, d in enumerate(docs, start=1):
+        src = d.metadata.get("source", "unknown")
+        lines.append(f"[{i}] {d.page_content}")
+    return "\n\n".join(lines)
 
 
 def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
@@ -39,7 +37,12 @@ def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
 
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "Answer only using the provided context."),
+            (
+                "system",
+                "You are a medical data assistant. "
+                "Answer ONLY using the provided context. "
+                "If the answer is not present, say you don't know.",
+            ),
             ("human", "Context:\n{context}\n\nQuestion: {question}"),
         ]
     )
@@ -50,16 +53,9 @@ def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
         base_url=base_url,
         temperature=0.1,
         max_tokens=512,
-        default_headers={
-            "HTTP-Referer": "https://streamlit.io",
-            "X-Title": "medical-rag-app",
-        },
     )
 
-    )
-
-
-    return (
+    chain = (
         {
             "context": retriever | format_docs,
             "question": RunnablePassthrough(),
@@ -68,3 +64,5 @@ def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
         | llm
         | StrOutputParser()
     )
+
+    return chain
