@@ -30,8 +30,8 @@ def generate_trend_chart(df, test_name):
     # Predict 30 days out
     last_date = subset['report_date'].max()
     future_date = last_date + pd.Timedelta(days=30)
-    future_ordinal = np.array([[future_date.toordinal()]])
-    predicted_value = model.predict(future_ordinal)[0]
+    future_df = pd.DataFrame({'date_ordinal': [future_date.toordinal()]})
+    predicted_value = model.predict(future_df)[0]
 
     # --- Visualization ---
     fig = px.line(subset, x='report_date', y='value', markers=True, title=f"{test_name} Trends")
