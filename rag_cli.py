@@ -14,6 +14,10 @@ def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
         model="openai/text-embedding-3-large",
         api_key=api_key,
         base_url=base_url,
+        default_headers={
+            "HTTP-Referer": "https://streamlit.io",
+            "X-Title": "medical-rag-app",
+        },
     )
 
     vectordb = Chroma(
@@ -22,6 +26,7 @@ def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
     )
 
     return vectordb.as_retriever(search_kwargs={"k": 6})
+
 
 
 def format_docs(docs):
@@ -44,7 +49,13 @@ def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
         base_url=base_url,
         temperature=0.1,
         max_tokens=512,
+        max_retries=2,
+        default_headers={
+            "HTTP-Referer": "https://streamlit.io",
+            "X-Title": "medical-rag-app",
+        },
     )
+
 
     return (
         {
