@@ -182,34 +182,35 @@ def main():
                         st.metric("Predicted (30d)", f"{pred_val:.2f}")
 
     # ---------------- TAB 2: RAG Q&A ----------------
+    
+    # ---------------- TAB 2: RAG Q&A ----------------
     with tab2:
         st.header("Ask your Data")
         try:
+            # Note: It's better to initialize the chain once, 
+            # perhaps using st.cache_resource, but for now let's just fix the crash.
             chain = make_chain(api_key=os.environ["OPENROUTER_API_KEY"])
             rag_ready = True
-        except Exception:
+        except Exception as e:
             rag_ready = False
-            st.warning("AI not ready. Please ingest CSVs first.")
+            st.warning(f"AI not ready: {e}")
 
-        query = st.text_input("Question:", placeholder="Compare my Hb between 2024 and 2025")
+        query = st.text_input("Question:", placeholder="Compare my Hb between 2024 and 2025", key="rag_query_input")
 
-        if st.button("Ask AI") and rag_ready and query:
-            with st.spinner("Thinking..."):
-                res = chain.invoke(query)
-                st.write(res)
-
-    # Inside Tab 2 of app.py
-        if st.button("Ask AI") and rag_ready and query:
-            with st.spinner("Thinking..."):
-                try:
-                    res = chain.invoke(query)
-                    st.write(res)
-                except Exception as e:
-                    # THIS WILL SHOW THE ACTUAL ERROR MESSAGE FROM OPENROUTER
-                    st.error(f"Developer Debug - Actual Error: {e}")
-
-    # ---------------- TAB 3: CSV UPLOAD ----------------
-        # ---------------- TAB 3: CSV UPLOAD ----------------
+        # ONLY ONE BUTTON BLOCK HERE
+        if st.button("Ask AI", key="ask_button_unique"): 
+            if not query:
+                st.warning("Please enter a question.")
+            elif not rag_ready:
+                st.error("RAG system is not initialized.")
+            else:
+                with st.spinner("Thinking..."):
+                    try:
+                        res = chain.invoke(query)
+                        st.write(res)
+                    except Exception as e:
+                        st.error(f"Developer Debug - Actual Error: {e}")
+                        
     with tab3:
         st.header("Upload 2024/2025 CSVs")
         uploaded_files = st.file_uploader("Upload CSV files", type="csv", accept_multiple_files=True)
