@@ -21,6 +21,10 @@ def build_vectorstore(chunks, api_key, base_url="https://openrouter.ai/api/v1"):
         model="openai/text-embedding-3-large",
         api_key=api_key,
         base_url=base_url,
+        default_headers={
+            "HTTP-Referer": "https://streamlit.io",  # can be any valid URL
+            "X-Title": "medical-rag-app",
+        },
     )
 
     vectordb = Chroma.from_documents(
@@ -30,3 +34,4 @@ def build_vectorstore(chunks, api_key, base_url="https://openrouter.ai/api/v1"):
     )
 
     return vectordb
+
