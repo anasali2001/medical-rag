@@ -19,13 +19,14 @@ def chunk_docs(docs):
 def build_vectorstore(chunks, api_key, base_url="https://openrouter.ai/api/v1"):
     embeddings = OpenAIEmbeddings(
         model="openai/text-embedding-3-large",
-        api_key=api_key,
+        openai_api_key=api_key,
         base_url=base_url,
         default_headers={
-            "HTTP-Referer": "https://streamlit.io",  # can be any valid URL
+            "HTTP-Referer": "https://streamlit.io",
             "X-Title": "medical-rag-app",
         },
     )
+
 
     vectordb = Chroma.from_documents(
         documents=chunks,
