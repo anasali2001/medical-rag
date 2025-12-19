@@ -170,7 +170,7 @@ def main():
                 # Generate Chart
                 fig, pred_val = generate_trend_chart(df, selected_test)
                 if fig:
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
 
             with col2:
                 st.subheader("Analysis")
