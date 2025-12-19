@@ -1,117 +1,90 @@
-# PDF RAG task
+🏥 Personal Health Data Hub (PMIA)
+An AI-powered medical insights platform that transforms unstructured lab reports into structured data, visual trends, and predictive health insights.
+![alt text](https://img.shields.io/badge/python-3.11+-blue.svg)
 
-This project demonstrates a complete Retrieval-Augmented Generation (RAG) pipeline that allows you to ask questions about PDF documents. It uses LangChain for orchestration, OpenRouter to access various LLMs (like Kimi K2) and embedding models, ChromaDB for a local vector store, and Streamlit for a simple web interface.
+![alt text](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)
 
-## Features
+![alt text](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)
 
--   **PDF Ingestion:** Automatically loads, splits, and indexes PDF files from a `data/` directory.
--   **Vector Search:** Uses `openai/text-embedding-3-large` via OpenRouter to create embeddings and ChromaDB to store and retrieve them.
--   **Generative Q&A:** Leverages the `moonshotai/kimi-k2` model via OpenRouter to generate answers based on the retrieved document chunks.
--   **Two Interfaces:**
-    -   A command-line interface (`rag_cli.py`) for quick testing.
-    -   A user-friendly web app (`app.py`) built with Streamlit.
--   **Modular Code:** The logic is separated into distinct files for ingestion, core RAG chain logic, and the web application.
+![alt text](https://img.shields.io/badge/LangChain-121212?style=flat&logo=chainlink&logoColor=white)
+🌟 Project Vision
+Personal medical records are often trapped in static PDFs or disparate CSVs. PMIA provides a secure, centralized hub where users can track long-term health trends, receive AI-powered explanations of their metrics, and forecast future values using Machine Learning.
+✨ Features
+📊 Interactive Dashboard: Track historical trends for any lab metric (Hb, Cholesterol, Vitamin D, etc.) using high-performance Plotly charts.
+💬 AI Medical Assistant (RAG): Ask natural language questions like "How has my Hemoglobin changed since last year?" using Retrieval-Augmented Generation.
+📈 Predictive Analytics: Uses scikit-learn Linear Regression to forecast health metrics 30 days into the future.
+📥 Smart Ingestion: Handles dirty CSV data, fixes formatting issues, and maps dates automatically.
+💾 Robust Persistence: Integrated with Supabase (PostgreSQL) for reliable cloud storage, replacing ephemeral local files.
+🛠️ Tech Stack
+Layer	Technology
+Frontend	Streamlit
+Database	Supabase (PostgreSQL)
+Vector Store	ChromaDB
+LLM Engine	OpenRouter (Kimi-k2 / Gemini 1.5 Flash)
+Orchestration	LangChain
+ML/Analytics	Scikit-learn, Pandas, Plotly
+📐 Architecture
+Ingestion: User uploads CSV/PDF files.
+Structuring: Python logic cleans values; LLM Agents (via OpenRouter) extract entities.
+Storage: Structured data is pushed to Supabase; Unstructured text is vectorized into ChromaDB.
+Analysis: Scikit-learn processes historical points to generate a regression line.
+Retrieval: LangChain retrieves relevant context from ChromaDB to answer user queries via the Chat interface.
+🚀 Getting Started
+Prerequisites
+Python 3.11+
+A Supabase project
+An OpenRouter API Key
+Installation
+Clone the repository:
+code
+Bash
+git repo clone [YOUR_USERNAME]/medical-rag
+cd medical-rag
+Install dependencies:
+code
+Bash
+pip install -r requirements.txt
+Configure Secrets:
+Create a .streamlit/secrets.toml file:
+code
+Toml
+[supabase]
+url = "YOUR_SUPABASE_URL"
+key = "YOUR_SUPABASE_SERVICE_ROLE_KEY"
 
-## Process Flow & Algorithms
+[openrouter]
+api_key = "YOUR_OPENROUTER_API_KEY"
+Database Setup
+Run the following SQL in your Supabase SQL Editor to create the necessary table:
+code
+SQL
+CREATE TABLE public.lab_results (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    test_name VARCHAR(100) NOT NULL,
+    value DOUBLE PRECISION NOT NULL,
+    unit VARCHAR(20),
+    report_date DATE NOT NULL,
+    status VARCHAR(20) DEFAULT 'Unknown',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+Running the App
+code
+Bash
+streamlit run app.py
+📝 Roadmap
 
-The system operates in two main phases: **Ingestion** and **Querying**.
+CSV Multi-file Ingestion
 
-### 1. Ingestion Phase (`ingest.py`)
+Linear Regression for 30-day forecasting
 
-This is a one-time process you run to prepare your documents.
+RAG Chatbot Integration
 
-1.  **Load Documents:** The script scans the `data/` directory for all `.pdf` files. It uses `PyPDFLoader` from LangChain to load the text content from each page.
-2.  **Split Text (Chunking):** Since LLMs have limited context windows, the loaded documents are split into smaller, manageable chunks. The `RecursiveCharacterTextSplitter` is used for this. It tries to split text based on a hierarchy of separators (like `\n\n`, `\n`, `.`, ` `) to keep related text together.
-3.  **Generate Embeddings:** Each text chunk is converted into a numerical vector (an "embedding") that captures its semantic meaning. We use the powerful `openai/text-embedding-3-large` model, accessed through the OpenRouter API.
-4.  **Store in Vector Database:** The text chunks and their corresponding embeddings are stored in a local [ChromaDB](https://www.trychroma.com/) vector database. This database is persisted to the `chroma_db/` directory, allowing for efficient semantic search later.
+PDF OCR Support (via Gemini 2.0 Flash)
 
-### 2. Querying Phase (The RAG Chain in `rag_cli.py` and `app.py`)
+Multi-user Authentication
 
-This is what happens every time you ask a question.
-
-1.  **User Input:** The user provides a question (e.g., "What skills are tested in the compiler assignment?").
-2.  **Create Query Embedding:** The user's question is converted into an embedding using the *same* model (`openai/text-embedding-3-large`) that was used during ingestion.
-3.  **Semantic Search (Retrieval):** The query embedding is used to search the Chroma vector database. Chroma finds the most semantically similar text chunks from the original PDFs (by default, the top 3 chunks). This is the **"Retrieval"** part of RAG.
-4.  **Augment Prompt:** The retrieved chunks (the "context") are formatted and combined with the user's original question into a single, detailed prompt. The prompt explicitly instructs the LLM to answer the question *only* using the provided context, which helps prevent hallucinations.
-5.  **Generate Answer (Generation):** This combined prompt is sent to the `moonshotai/kimi-k2` LLM via OpenRouter. The LLM reads the context and the question and generates a coherent, concise answer. This is the **"Generation"** part of RAG.
-6.  **Display Answer:** The final answer is returned to the user through the CLI or the Streamlit web app.
-
-## Project Structure
-
-```
-.
-├── app.py              # The Streamlit web application
-├── ingest.py           # Script to process PDFs and build the vector store
-├── rag_cli.py          # Core RAG chain logic and a command-line interface
-├── requirements.txt    # Python dependencies
-├── .env                # (You create this) Your secret API keys
-├── data/               # Folder to place your PDF documents
-│   └── example.pdf
-└── chroma_db/          # (Generated by ingest.py) The vector store
-```
-
-## Setup and Usage
-
-**Prerequisites:**
--   Python 3.9+
--   An [OpenRouter API Key](https://openrouter.ai/keys)
-
-**Steps:**
-
-1.  **Clone the repository and navigate to the directory.**
-
-2.  **Create a Python virtual environment and activate it:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
-
-3.  **Install the required dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Set up your environment variables:**
-    -   Copy the example file: `cp .env.example .env`
-    -   Open the `.env` file and add your OpenRouter API key.
-
-5.  **Add your documents:**
-    -   Create a folder named `data`.
-    -   Place one or more `.pdf` files inside the `data/` folder.
-
-6.  **Run the Ingestion Script:**
-    -   This will process your PDFs and create the `chroma_db/` vector store. You only need to run this once, or again if you add/change your PDFs.
-    ```bash
-    python ingest.py
-    ```
-
-7.  **Run the application:**
-    -   **Option A: Command-Line Interface**
-        ```bash
-        python rag_cli.py
-        ```
-        You can now type questions directly into your terminal.
-
-    -   **Option B: Streamlit Web App**
-        ```bash
-        streamlit run app.py
-        ```
-        Open your web browser to the URL provided by Streamlit (usually `http://localhost:8501`).
-
----
-## Code Modules Explained
-
-### `ingest.py`
-This script is the data pipeline. Its sole purpose is to convert the raw PDF files in the `data/` directory into a queryable Chroma vector database. It is designed to be run once before using the main application.
-
-### `rag_cli.py`
-This file contains the core logic for the RAG chain.
--   `get_retriever()`: Initializes the connection to the existing ChromaDB and sets it up as a LangChain retriever.
--   `make_chain()`: The heart of the application. It constructs the full RAG pipeline using LangChain Expression Language (LCEL). It defines the data flow: user input -> retrieve context -> format prompt -> call LLM -> parse output.
--   The `main()` function provides a simple command-line loop for interacting with the chain.
-
-### `app.py`
-This is the front-end for the application.
--   It imports the `make_chain` function from `rag_cli.py`, demonstrating code reuse.
--   It uses the Streamlit library to create a simple and interactive UI with a title, a text area for input, and a button.
--   It handles user input, shows a "Thinking..." spinner while the chain is processing, and displays the final answer or any errors that occur.
+Color-coded status alerts (Normal/Abnormal)
+⚠️ Disclaimer
+This application is for informational purposes only. It does not provide medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+Author: [Your Name]
+License: MIT
