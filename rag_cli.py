@@ -12,13 +12,14 @@ VECTOR_DIR = BASE_DIR / "chroma_db"
 def get_retriever(api_key, base_url="https://openrouter.ai/api/v1"):
     embeddings = OpenAIEmbeddings(
         model="openai/text-embedding-3-large",
-        api_key=api_key,
+        openai_api_key=api_key,
         base_url=base_url,
         default_headers={
             "HTTP-Referer": "https://streamlit.io",
             "X-Title": "medical-rag-app",
         },
-    )
+)
+
 
     vectordb = Chroma(
         persist_directory=str(VECTOR_DIR),
@@ -45,15 +46,16 @@ def make_chain(api_key, base_url="https://openrouter.ai/api/v1"):
 
     llm = ChatOpenAI(
         model="moonshotai/kimi-k2",
-        api_key=api_key,
+        openai_api_key=api_key,
         base_url=base_url,
         temperature=0.1,
         max_tokens=512,
-        max_retries=2,
         default_headers={
             "HTTP-Referer": "https://streamlit.io",
             "X-Title": "medical-rag-app",
         },
+    )
+
     )
 
 
