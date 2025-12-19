@@ -1,10 +1,12 @@
-import streamlit as st   # first, import Streamlit
-import os                # then OS
+# app.py - at the very top
+import os
+import streamlit as st
 
-# Set environment variables immediately
+# Set BOTH variables to the OpenRouter key
+# This trick forces the OpenAI-compatible library to use OpenRouter's key and URL
+os.environ["OPENAI_API_KEY"] = st.secrets["openrouter"]["api_key"]
+os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
 os.environ["OPENROUTER_API_KEY"] = st.secrets["openrouter"]["api_key"]
-SUPABASE_URL = st.secrets["supabase"]["url"]
-SUPABASE_KEY = st.secrets["supabase"]["key"]
 
 # Now other imports
 import pandas as pd
@@ -195,6 +197,16 @@ def main():
             with st.spinner("Thinking..."):
                 res = chain.invoke(query)
                 st.write(res)
+
+    # Inside Tab 2 of app.py
+        if st.button("Ask AI") and rag_ready and query:
+            with st.spinner("Thinking..."):
+                try:
+                    res = chain.invoke(query)
+                    st.write(res)
+                except Exception as e:
+                    # THIS WILL SHOW THE ACTUAL ERROR MESSAGE FROM OPENROUTER
+                    st.error(f"Developer Debug - Actual Error: {e}")
 
     # ---------------- TAB 3: CSV UPLOAD ----------------
         # ---------------- TAB 3: CSV UPLOAD ----------------
