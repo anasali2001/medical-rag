@@ -96,6 +96,4 @@ streamlit run app.py
 ## ⚠️ Disclaimer
 **This application is for informational purposes only.** It does not provide medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
 
----
-**Author:** [Your Name]  
-**License:** MIT
+
