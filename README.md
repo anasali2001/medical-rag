@@ -1,7 +1,3 @@
-This is a professional, comprehensive `README.md` file for your GitHub repository. It combines your original SRS vision with the actual technical implementation we just finalized.
-
-***
-
 # 🏥 Personal Health Data Hub (PMIA)
 
 An AI-powered medical insights platform that transforms unstructured lab reports into structured data, visual trends, and predictive health insights.
